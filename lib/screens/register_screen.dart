@@ -1,10 +1,11 @@
-import 'dart:developer';
-
+import 'package:chat/helpers/mostrar_alerta.dart';
+import 'package:chat/services/auth_service.dart';
 import 'package:chat/widgets/boton_azul.dart';
 import 'package:chat/widgets/custom_input.dart';
 import 'package:chat/widgets/labels.dart';
 import 'package:chat/widgets/logo.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -52,6 +53,7 @@ class __FormState extends State<_Form> {
   final nameCtrl = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
     return Container(
       margin: const EdgeInsets.only(top: 40),
       padding: const EdgeInsets.symmetric(horizontal: 50),
@@ -61,7 +63,7 @@ class __FormState extends State<_Form> {
             icon: Icons.perm_identity,
             placeholder: 'Nombre',
             keyboardType: TextInputType.text,
-            textEditingController: emailCtrl,
+            textEditingController: nameCtrl,
           ),
           CustomInput(
             icon: Icons.mail_outline,
@@ -76,11 +78,23 @@ class __FormState extends State<_Form> {
             isPassword: true,
           ),
           BotonAzul(
-              text: 'Ingrese',
-              onPressed: () {
-                log(emailCtrl.text);
-                log(passCtrl.text);
-              })
+              text: 'Crear cuenta',
+              onPressed: authService.autenticando
+                  ? null
+                  : () async {
+                      FocusScope.of(context).unfocus();
+                      final registerOk = await authService.register(
+                          nameCtrl.text.trim(),
+                          emailCtrl.text.trim(),
+                          passCtrl.text.trim());
+
+                      if (registerOk == true) {
+                        Navigator.pushReplacementNamed(context, 'usuarios');
+                      } else {
+                        mostrarAlerta(
+                            context, 'Error en registro', registerOk['msg']);
+                      }
+                    })
         ],
       ),
     );
